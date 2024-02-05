@@ -1,0 +1,28 @@
+{
+  "name": "bilimusic",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.2",
+    "dplayer": "^1.27.1",
+    "naive-ui": "^2.37.3",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.1",
+    "qrcode": "^1.5.3",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5",
+    "vue3-eventbus": "^2.0.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.8",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^5.0.0"
+  }
+}
