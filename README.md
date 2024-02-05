@@ -1,7 +1,34 @@
-# Tauri + Vue 3
+## 技术栈
 
-This template should help get you started developing with Tauri + Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+- Vue3
+- Rust
+- Tauri
 
-## Recommended IDE Setup
+## 功能点
+- 扫码登录
+- 注销登录
+- 搜索视频
+- 下载视频
+- 播放视频
+- 循环播放列表视频
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+
+## 部分截图
+<div style="display: flex; justify-content: space-around;">
+    <img src="https://github.com/huxiaofan1223/bilimusic/raw/master/screenshorts/not_login.jpg" alt="Not Login" style="width: 49%;">
+    <img src="https://github.com/huxiaofan1223/bilimusic/raw/master/screenshorts/login.jpg" alt="Login" style="width: 49%;">
+</div>
+<div style="display: flex; justify-content: space-around;">
+ <img src="https://github.com/huxiaofan1223/bilimusic/raw/master/screenshorts/search.jpg" alt="Search" style="width: 49%;">
+  <img src="https://github.com/huxiaofan1223/bilimusic/raw/master/screenshorts/playlist.jpg" alt="Playlist" style="width: 49%;">
+</div>
+<div style="display: flex; justify-content: space-around;">
+    <img src="https://github.com/huxiaofan1223/bilimusic/raw/master/screenshorts/pre_load.jpg" alt="Pre Load" style="width: 49%;">
+    <img src="https://github.com/huxiaofan1223/bilimusic/raw/master/screenshorts/loading.jpg" alt="Loading" style="width: 49%;">
+</div>
+
+### 文档来自
+- https://github.com/SocialSisterYi/bilibili-API-collect/
+### 原理
+- Rust请求B站接口返回给前端
+- 图片和视频通过Rust反向代理获取
