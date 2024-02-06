@@ -329,6 +329,7 @@ async fn main() {
             println!("{}, {argv:?}, {cwd}", app.package_info().name);
             // app.emit_all("single-instance", Payload { args: argv, cwd }).expect("Failed to emit");
             let window = app.get_window("main").expect("Failed to get window");
+            window.unminimize().unwrap();
             window.set_focus().expect("Failed to set window focus");
             window.show().expect("Failed to show window");
             // window.request_user_attention(Some(UserAttentionType::Informational)).expect("Failed to request user attention");
@@ -381,6 +382,7 @@ fn system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
             ..
         } => {
             let window = app.get_window("main").unwrap();
+            window.unminimize().unwrap();
             window.show().unwrap();
             window.set_focus().unwrap();
         }
@@ -394,6 +396,7 @@ fn system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
             // }
             "show" => {
                 let window = app.get_window("main").unwrap();
+                window.unminimize().unwrap();
                 window.show().unwrap();
                 window.set_focus().unwrap();
             }
