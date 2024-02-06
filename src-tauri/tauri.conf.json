@@ -10,11 +10,15 @@
     "version": "0.0.1"
   },
   "tauri": {
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    },
     "allowlist": {
       "all": true,
-      "window":{
-        "all":true,
-        "show":true,
+      "window": {
+        "all": true,
+        "show": true,
         "setFocus": true,
         "requestUserAttention": true
       },
@@ -40,7 +44,7 @@
     },
     "windows": [
       {
-        "label":"main",
+        "label": "main",
         "fullscreen": false,
         "resizable": true,
         "title": "bilimusic",

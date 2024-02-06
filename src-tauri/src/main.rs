@@ -15,6 +15,9 @@ use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
+use tauri::{
+    AppHandle, CustomMenuItem, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, Wry,
+};
 use tokio::net::TcpListener;
 use url::form_urlencoded;
 use url::Url;
@@ -43,7 +46,6 @@ lazy_static! {
     static ref COOKIE_STR: Mutex<String> = Mutex::new("".to_string());
     static ref PROXY_FILE_BASE_URL: Mutex<String> = Mutex::new("127.0.0.1:3000".to_string());
 }
-// static mut COOKIE_STR: String = "buvid3=E675259E-CE29-29E9-577D-A96EB47E26EC32951infoc; b_nut=1698312432; i-wanna-go-back=-1; b_ut=7; _uuid=B10D419106-BC65-65EC-58C2-77DE8213ED3532275infoc; buvid4=05D4C7C1-955B-C658-3F45-4503C6B7478933854-023102617-n9JVkHlXJFhcM8fOkrAmAw%3D%3D; DedeUserID=253197450; DedeUserID__ckMd5=cab81eaeee7343ee; CURRENT_FNVAL=4048; rpdid=|(J~kmuJum~J0J'uYm)JukYlu; LIVE_BUVID=AUTO5216983127142774; enable_web_push=ENABLE; iflogin_when_web_push=1; header_theme_version=CLOSE; fingerprint=56abd5c3d642b00343d5a5af249fa8fa; buvid_fp_plain=undefined; buvid_fp=56abd5c3d642b00343d5a5af249fa8fa; CURRENT_QUALITY=64; PVID=1; hit-dyn-v2=1; home_feed_column=5; browser_resolution=1920-1049; b_lsid=4E9485EE_18D530D3023; SESSDATA=b4a2009d%2C1722047398%2Caa2a5%2A12CjA5rJa7siTU4zj37WpjWLCCFSf5wCfPNIFypS-IvZM-Bdmfyua3x_3Ytd_8pauGKTcSVll4c2FOczl4SmhPd2NuMC1DR0cwS01rQkNWbTVHckRTS1RUVml3TklxNjhWWHhyR0JVdFhMREFKeEJ0SFRfN2NTSzQzVmxjRmdOVXd2UExrNGtYMUdBIIEC; bili_jct=f985ddb1aec1212e929d1fe1fc7bb901; sid=ewuaisaj; bp_video_offset_253197450=891872318641406097".to_string();
 const USER_AGENT:&str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 #[tauri::command]
 async fn set_cookie_val(cookieval: String) -> Result<String, String> {
@@ -190,7 +192,7 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, Infallible
         let data = COOKIE_STR.lock().unwrap();
         data.to_owned()
     };
-    println!("handle_request_cookie:{}",cookie_value);
+    println!("handle_request_cookie:{}", cookie_value);
     let uri = req.uri();
     let query_params = match uri.query() {
         Some(query) => query,
@@ -340,11 +342,63 @@ async fn main() {
             get_user_info,
             get_file_proxy_baseurl
         ])
+        .system_tray(SystemTray::new().with_menu(tray_menu()))
+        .on_system_tray_event(system_tray_event)
+        .on_window_event(|event| match event.event() {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                event.window().hide().unwrap();
+                api.prevent_close();
+            }
+            _ => {}
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
     // 等待 Hyper 服务器的线程结束
     if let Err(e) = server_handle.await {
         eprintln!("hyper server thread panicked: {:?}", e);
+    }
+}
+
+// tray menu
+fn tray_menu() -> SystemTrayMenu {
+    let quit = CustomMenuItem::new("quit".to_string(), "退出");
+    // let hide = CustomMenuItem::new("hide".to_string(), "隐藏");
+    let show = CustomMenuItem::new("show".to_string(), "显示");
+    let tray_menu = SystemTrayMenu::new()
+        // .add_item(hide)
+        .add_item(show)
+        .add_native_item(SystemTrayMenuItem::Separator)
+        .add_item(quit);
+    tray_menu
+}
+
+fn system_tray_event(app: &AppHandle<Wry>, e: SystemTrayEvent) {
+    match e {
+        SystemTrayEvent::LeftClick {
+            position: _,
+            size: _,
+            ..
+        } => {
+            let window = app.get_window("main").unwrap();
+            window.show().unwrap();
+            window.set_focus().unwrap();
+        }
+        SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
+            "quit" => {
+                std::process::exit(0);
+            }
+            // "hide" => {
+            //     let window = app.get_window("main").unwrap();
+            //     window.hide().unwrap();
+            // }
+            "show" => {
+                let window = app.get_window("main").unwrap();
+                window.show().unwrap();
+                window.set_focus().unwrap();
+            }
+            _ => {}
+        },
+        _ => {}
     }
 }
