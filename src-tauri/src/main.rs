@@ -279,7 +279,7 @@ async fn find_available_port() -> SocketAddr {
     while listener.is_err() {
         // 端口被占用，尝试自动选择下一个端口
         let new_port = match addr.port().checked_add(1) {
-            Some(port) if port <= 65535 => port,
+            Some(port) if port < 65535 => port,
             _ => {
                 // 选择其他处理方式，这里选择重新开始从初始端口
                 eprintln!(
