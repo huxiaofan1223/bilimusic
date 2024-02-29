@@ -5,9 +5,11 @@ import { useStore } from '../store';
 import { NButton } from 'naive-ui';
 import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg'
+
 const router = useRouter();
-const goPath = (val)=>{
-    router.push({ path: val||'/' });
+const goPath = (val) => {
+  router.push({ path: val || '/' });
 }
 const message = useMessage();
 
@@ -31,6 +33,8 @@ const pagination = reactive({
   }
 })
 const isDownloading = ref(false);
+const isTransform = ref(false);
+const isTransformTxt = ref('');
 const downloadVisible = ref(false);
 const columns = [
   {
@@ -96,7 +100,7 @@ const columns = [
 ]
 
 async function getSearchResult() {
-  if(!store.isLogin){
+  if (!store.isLogin) {
     message.error('请先登录bilibili账号');
     goPath('/setting');
     return;
@@ -218,6 +222,94 @@ const onClose = () => {
     progressWidth.value = '0%';
   }
 }
+
+const handleDownloadAudio = async () => {
+  isDownloading.value = true;
+  let videoUrl = downloadVideoURL.value;
+  // videoUrl = 'http://127.0.0.1/test.mp4';
+  const fileName = downloadVideoFileName.value + '.mp3';
+  const response = await fetch(videoUrl);
+  if (response.body) {
+    const contentLength = +response.headers.get('content-length');
+    let receivedLength = 0;
+
+    const reader = response.body.getReader();
+    const stream = new ReadableStream({
+      start(controller) {
+        function push() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              controller.close();
+              // isDownloading.value = false;
+              // progressVal.value = '';
+              // progressWidth.value = '0%';
+              return;
+            }
+            receivedLength += value.byteLength;
+            const progress = (receivedLength / contentLength) * 100;
+            progressWidth.value = progress + '%';
+            const progressName = byte2Txt(receivedLength) + '/' + byte2Txt(contentLength);
+            progressVal.value = `${progressName} ${progress.toFixed()}%`;
+            controller.enqueue(value);
+            push();
+          });
+        }
+        push();
+      }
+    });
+
+    const readableStream = new Response(stream);
+    const videoData = new Uint8Array(await readableStream.arrayBuffer());
+    const worker = new Worker("ffmpeg-worker-mp4.js");
+    isTransform.value = true;
+    worker.onmessage = function (e) {
+      const msg = e.data;
+      switch (msg.type) {
+        case "ready":
+          console.log('ready')
+          worker.postMessage({ type: "run", MEMFS: [{ name: "input.mp4", data: videoData }], arguments: ['-i', 'input.mp4', '-vn', '-acodec:a', 'libmp3lame', '-q:a', '0', 'output.mp3'] });
+          break;
+        case "run":
+          console.log("run", msg.data);
+          break;
+        case "stdout":
+          console.log('stdout', msg.data);
+          break;
+        case "stderr":
+          isTransformTxt.value = msg.data;
+          console.log('stderr', msg.data);
+          break;
+        case "error":
+          console.log("error", msg.data);
+          break;
+        case "exit":
+          console.log("exit", msg.data);
+          break;
+        case "abort":
+          console.log("abort", msg.data);
+          break;
+        case "done":
+          isDownloading.value = false;
+          progressVal.value = '';
+          progressWidth.value = '0%';
+          isTransform.value = false;
+          console.log('done', msg.data);
+          const audioData = msg.data.MEMFS[0].data;
+          const blob = new Blob([audioData], { type: 'audio/mp3' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          console.log([fileName]);
+          a.download = fileName; // 设置文件名
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          break;
+      }
+    };
+  }
+}
 </script>
 
 <template>
@@ -236,11 +328,16 @@ const onClose = () => {
     <div>
       <div>
         <n-button @click="handleDownloadVideo" :loading="isDownloading">{{ downloadVideoName }}</n-button>
+        <n-button @click="handleDownloadAudio" :loading="isDownloading" type="primary"
+          style="margin-left:30px;">只下载音频</n-button>
       </div>
       <div v-if="isDownloading" style="margin-top:10px;">
         <div>进度:&nbsp;&nbsp;{{ progressVal }}</div>
         <div :style="{ width: progressWidth, height: '5px', backgroundColor: '#4CAF50', borderRadius: '2px' }"></div>
       </div>
+
+      <div v-if="isTransform" style="margin-top:10px;">音频转换中...</div>
+      <div v-if="isTransform" style="margin-top:10px;">{{ isTransformTxt }}</div>
     </div>
   </n-modal>
 </template>
