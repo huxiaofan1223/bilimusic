@@ -33,3 +33,5 @@
 ### 原理
 - Rust请求B站接口返回给前端
 - 图片和视频通过Rust反向代理获取
+- 下载视频是前端fetch API
+- 下载音频原理是 前端下载视频并且转换成mp3(via ffmpeg.js and web worker)
