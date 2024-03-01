@@ -5,7 +5,6 @@ import { useStore } from '../store';
 import { NButton } from 'naive-ui';
 import { useMessage } from 'naive-ui'
 import { useRouter } from 'vue-router';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg'
 
 const router = useRouter();
 const goPath = (val) => {
